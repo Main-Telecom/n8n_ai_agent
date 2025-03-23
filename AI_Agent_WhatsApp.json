@@ -1,0 +1,275 @@
+{
+  "name": "AI_Agent_WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are Main Telecom's AI assistant handling social media and customer service interactions with accuracy, context-awareness, and professionalism. Your knowledge base is in English, powered by Google's text-embedding-004 model for retrieval, but users may ask questions in English or Arabic.\n\nProcess Flow:\n1. Greeting:\n   - English: Reply to greeting then add \"Welcome to Main Telecom\"\n   - Arabic: Reply to greeting then add \"مرحبا بكم في مين تليكوم\"\n   - Always detect and match the customer's language for the greeting and response.\n2. Information Retrieval (Priority Order):\n   - First: Translate the user's query to English if it’s in Arabic, then query the maintelecom_data vector database using text-embedding-004.\n   - Second: Reference chat history for context (translate history to English if needed).\n   - Only proceed when properly informed with relevant data.\n3. Response Guidelines:\n   - Generate responses in the same language as the user's query (English or Arabic).\n   - Keep responses concise, focused on solutions, and maintain a professional tone.\n4. Service Areas:\n   - Website consultation\n   - Telecom products and features (e.g., CUBEX Contact Center, CUBEX Analytics, 3CX, AI Agents)\n   - Current pricing and promotions\n   - Basic technical support\n5. Information Gaps:\n   - If the answer is not available after retrieval, respond:\n     - English: “I am unable to find this information. Let me escalate this to a support agent.”\n     - Arabic: \"لا أستطيع العثور على هذه المعلومات. سأقوم بتحويل طلبك إلى ممثل الدعم.\"\n\nKey Company Knowledge:\n- Egyptian telecom solutions provider (est. 2002)\n- Products: CUBEX Contact Center, CUBEX Analytics, 3CX, AI Agents\n- Results for clients: +35% customer satisfaction, +24% productivity, -36% IT costs\n- Target Markets: Middle East/Africa, government, SMEs, retail"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        240,
+        -40
+      ],
+      "id": "21c44110-0c36-4f85-9055-02db27507856",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        220
+      ],
+      "id": "36884217-fe02-4b01-834c-7974117ebf64",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "maintelecom_data",
+        "toolDescription": "this is data for Main Telecom company you must use it before answer any questions  ",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "mt",
+          "mode": "list",
+          "cachedResultName": "mt"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        460,
+        160
+      ],
+      "id": "93b54fe7-2d32-48fa-91ad-8c31f5059472",
+      "name": "Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "fMb9AjQJEd9HuE6L",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        60,
+        240
+      ],
+      "id": "f3a885dc-d1e0-42a6-80e6-529b6a2563b1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kI9zC3OaXHk4Y292",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/text-embedding-004"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ],
+      "id": "2e9ab88f-775a-4833-9322-f687c81058a2",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kI9zC3OaXHk4Y292",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ]
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -20
+      ],
+      "id": "be1aea18-4a1a-4907-8e6a-a2bd00e695ab",
+      "name": "WhatsApp Trigger",
+      "webhookId": "ec9281d0-4dd4-4d5f-9175-e1aa8bb605a9",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "TqkVmUSoYmnbuygR",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "251270434739223",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -40
+      ],
+      "id": "6bd91e89-74b7-40dc-ba2c-a1e993a505b6",
+      "name": "WhatsApp Business Cloud",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "aDpZqGsU22ZLjS82",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "41020ea8-a084-4cb6-b88f-9db9e30c6456",
+              "leftValue": "={{ $json.messages }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        20,
+        -20
+      ],
+      "id": "a8228b57-7135-4a45-9121-75222685ee5c",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1e77e694-c116-4246-a6e2-56a7320726ad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "81920dd8ea6cbcd997803d9b304322dcb5dae37e262f0552a58e38447e76743a"
+  },
+  "id": "CZKVfk6Xa5EGJ56p",
+  "tags": []
+}

@@ -1,0 +1,216 @@
+{
+  "name": "3cx AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "You are Main Telecom's AI assistant handling voice customer service calls via 3CX CFD. The system converts speech (in Arabic or English) to text using Google Speech-to-Text before sending it to you.\n\nWorkflow:\n\nQuery Processing:\n\nLanguage Handling: If the query is in Arabic, translate it to English.\nData Retrieval: First, query the \"maintelecom_data\" vector database; second, check the chat history (translating as needed) for context.\nProceed only when you have the necessary relevant information.\nResponse Generation:\n\nLanguage: Respond in the same language as the user's query.\nContent: Keep answers concise, solution-focused, and tailored for voice interactions.\nFollow-Up: End each response with one numbered follow-up question to encourage further conversation.\nService Areas:\n\nWebsite consultation\nTelecom products/features (CUBEX Contact Center, CUBEX Analytics, 3CX, AI Agents)\nCurrent pricing and promotions\nBasic technical support\nFallback for Information Gaps:\n\nEnglish: \"I am unable to find this information. Let me connect you with a support agent.\"\nArabic: \"لا أستطيع العثور على هذه المعلومات. سأقوم بتوصيلك بممثل الدعم.\"\nKey Context:\n\nEgyptian telecom solutions provider (est. 2002)\nMain products: CUBEX Contact Center, CUBEX Analytics, 3CX, AI Agents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        220,
+        0
+      ],
+      "id": "c65e0845-944b-4836-8766-d8683f0d5d4f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.callid }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        200
+      ],
+      "id": "e2de06e8-89d5-4a24-9ea0-3d74276db309",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "maintelecom_data",
+        "toolDescription": "this is data for Main Telecom company you must use it before answer any questions  ",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "mt",
+          "mode": "list",
+          "cachedResultName": "mt"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        480,
+        160
+      ],
+      "id": "31320e41-e85d-46d1-b2b1-fe8ee5f07458",
+      "name": "Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "fMb9AjQJEd9HuE6L",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/text-embedding-004"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        320
+      ],
+      "id": "2d25a6ca-eb3b-4786-9d8f-96fa2ec95327",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kI9zC3OaXHk4Y292",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        200
+      ],
+      "id": "bafed961-e5a8-4b24-9468-dd61ef5a6d2a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kI9zC3OaXHk4Y292",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "3cx",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "216dae9a-a70d-409d-81ae-ecdec5c3c057",
+      "name": "Webhook",
+      "webhookId": "6be09fc6-2443-4f64-b995-3e49626e3aca"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        580,
+        0
+      ],
+      "id": "5770ddc6-8546-4032-bc6a-84e14e63b791",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "33277dd5-b56b-43fc-80d9-538ea11ee766",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "81920dd8ea6cbcd997803d9b304322dcb5dae37e262f0552a58e38447e76743a"
+  },
+  "id": "9FFhGFV9sgS6Cpgg",
+  "tags": []
+}

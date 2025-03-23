@@ -1,0 +1,19 @@
+pinecone DB Vector: pcsk_2DUR16_TjU5tFYVEKm6CrXganL7DMecMbNDWPUTHa8QfwHhEAqZAtgMf4h8AQjyXHFWFcy
+Gemini : AIzaSyCbpauguok44Aud6vDWrxxMFmzdgXv8kkk
+
+ngrok config add-authtoken 2tZfHK8wW48Nnu4dBcfYP0AFKOR_76YT88BHFh2VxNtXAzmvv
+
+t.me/Main_Telecom_bot
+Use this token to access the HTTP API:
+8035402666:AAGjiOQmUh5xMse48L_xvd8-hl3044aT4JQ
+
+
+WA 
+App ID : 984012143303431
+App secret : c9d1e726a9d57c592e39b20d6ec38bcb
+
+Access Token *
+EAANZB9C5BmwcBO4eoJWlZCrZCRteKkZCY8WWTAgNkZBekIX7it8bHhsibaZCQJFzZC2l8zQHWxLW8zI27DyogVIiqnjyODGdXjvpAu3YbKv8TSM4OvKdFdIL9Q6HlEiYye6P3GO5rTvZAZCJo9hrjsnRX504ZCBvZCd8JAUQlKCulndpCLQzUaYUJkBXThcvRfhArPdAY7QdufKqwoeSMYGKTPfFXMzzlQoZCikkpAWTQueZCTU0ZD
+Business Account ID *
+1093661466110448
+
